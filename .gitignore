@@ -1,0 +1,7 @@
+# Standard binary/intermediate output directories
+bin/
+obj/
+[Bb]uild/
+
+# Mac OS meta files
+.DS_Store
