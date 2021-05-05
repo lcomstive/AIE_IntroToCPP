@@ -4,12 +4,14 @@
 
 using namespace std::chrono;
 
+// #define SHADER_IMPL
+
 namespace CellularAutomata
 {
 	class World
 	{
 	public:
-		World(unsigned int width, unsigned int height, unsigned int particleSize = 10);
+		World(Vector2 worldSize, Vector2 windowSize);
 		~World();
 
 		void Run();
@@ -17,7 +19,6 @@ namespace CellularAutomata
 
 		unsigned int GetWidth();
 		unsigned int GetHeight();
-		unsigned int GetParticleSize();
 		unsigned int GetParticleCount();
 
 		ParticleType GetParticle(unsigned int x, unsigned int y);
@@ -34,17 +35,24 @@ namespace CellularAutomata
 			unsigned int newY,
 			ParticleType replacingType = ParticleType::None);
 
+		void SwapParticles(
+			unsigned int x,
+			unsigned int y,
+			unsigned int newX,
+			unsigned int newY
+		);
+
 	private:
 		ParticleType** m_Particles;
 		high_resolution_clock m_Timer;
-		unsigned int m_Width, m_Height, m_ParticleSize;
+		unsigned int m_Width, m_Height;
+		unsigned int m_ScreenWidth, m_ScreenHeight;
 
-		Image m_Image;
 		Color* m_Pixels;
-		Shader m_Shader;
-		Texture m_Texture;
-		int m_ShaderWidthLocation;
-		int m_ShaderParticlesLocation;
+		
+		Image m_Image;
+		unsigned int m_CurrentFrame;
+		std::vector<Texture2D> m_Textures;
 
 		void Update(float deltaTime);
 		void Draw();

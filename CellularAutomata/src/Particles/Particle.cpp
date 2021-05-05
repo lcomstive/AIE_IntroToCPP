@@ -16,46 +16,75 @@ void ProcessParticleNone(World*, unsigned int, unsigned int) { }
 
 void SandRule(World* world, unsigned int x, unsigned int y)
 {
-	if (y == world->GetHeight() - 1)
-		return; // Resting state if at bottom of world
+	int checkDirection = (rand() % 10) >= 5 ? 1 : -1;
+	// int checkDirection = 1;
 
-	// CHECK FOR EMPTY DOWN //
-	if (world->GetParticle(x, y - 1) == ParticleType::None)
-		return world->MoveParticle(x, y, x, y - 1);
+	// DOWN //
+	if(y > 0)
+		switch (world->GetParticle(x, y - 1))
+		{
+		case ParticleType::None:  return world->MoveParticle (x, y, x, y - 1);
+		case ParticleType::Water: return world->SwapParticles(x, y, x, y - 1);
+		default: break;
+		}
 
-	// CHECK FOR EMPTY DOWN-LEFT //
-	if (world->GetParticle(x - 1, y - 1) == ParticleType::None)
-		return world->MoveParticle(x, y, x - 1, y - 1);
+	// DOWN-LEFT //
+	if(y > 0)
+		switch (world->GetParticle(x - checkDirection, y - 1))
+		{
+		case ParticleType::None:  return world->MoveParticle (x, y, x - checkDirection, y - 1);
+		case ParticleType::Water:
+		{
+			if (world->GetParticle(x + checkDirection, y) != ParticleType::None)
+				break;
+			world->MoveParticle(x + checkDirection, y - 1, x + checkDirection, y);
+			world->MoveParticle(x, y, x + checkDirection, y - 1);
+			break;
+		}
+		default: break;
+		}
 
-	// CHECK FOR EMPTY DOWN-RIGHT //
-	if (world->GetParticle(x + 1, y - 1) == ParticleType::None)
-		return world->MoveParticle(x, y, x + 1, y - 1);
+	// DOWN-RIGHT //
+	if(y > 0)
+		switch (world->GetParticle(x + checkDirection, y - 1))
+		{
+		case ParticleType::None:  return world->MoveParticle (x, y, x + checkDirection, y - 1);
+		case ParticleType::Water:
+		{
+			if (world->GetParticle(x + checkDirection, y) != ParticleType::None)
+				break;
+			world->MoveParticle(x + checkDirection, y - 1, x + checkDirection, y);
+			world->MoveParticle(x, y, x + checkDirection, y - 1);
+			break;
+		}
+		default: break;
+		}
 }
 
 void WaterRule(World* world, unsigned int x, unsigned int y)
 {
-	if (y == world->GetHeight() - 1)
-		return; // Resting state if at bottom of world
+	// int checkDirection = (rand() % 10) >= 5 ? 1 : -1;
+	int checkDirection = 1;
 
 	// CHECK FOR EMPTY DOWN //
-	if (world->GetParticle(x, y - 1) == ParticleType::None)
+	if (y > 0 && world->GetParticle(x, y - 1) == ParticleType::None)
 		return world->MoveParticle(x, y, x, y - 1);
 
 	// CHECK FOR EMPTY DOWN-LEFT //
-	if (world->GetParticle(x - 1, y - 1) == ParticleType::None)
-		return world->MoveParticle(x, y, x - 1, y - 1);
+	if (y > 0 && world->GetParticle(x - checkDirection, y - 1) == ParticleType::None)
+		return world->MoveParticle(x, y, x - checkDirection, y - 1);
 
 	// CHECK FOR EMPTY DOWN-RIGHT //
-	if (world->GetParticle(x + 1, y - 1) == ParticleType::None)
-		return world->MoveParticle(x, y, x + 1, y - 1);
+	if (y > 0 && world->GetParticle(x + checkDirection, y - 1) == ParticleType::None)
+		return world->MoveParticle(x, y, x + checkDirection, y - 1);
 
 	// CHECK FOR EMPTY LEFT //
-	if (world->GetParticle(x - 1, y) == ParticleType::None)
-		return world->MoveParticle(x, y, x - 1, y);
+	if (world->GetParticle(x - checkDirection, y) == ParticleType::None)
+		return world->MoveParticle(x, y, x - checkDirection, y);
 
 	// CHECK FOR EMPTY RIGHT //
-	if (world->GetParticle(x + 1, y) == ParticleType::None)
-		return world->MoveParticle(x, y, x + 1, y);
+	if (world->GetParticle(x + checkDirection, y) == ParticleType::None)
+		return world->MoveParticle(x, y, x + checkDirection, y);
 }
 
 map<ParticleType, function<void(World*, unsigned int, unsigned int)>> CellularAutomata::ParticleRules =

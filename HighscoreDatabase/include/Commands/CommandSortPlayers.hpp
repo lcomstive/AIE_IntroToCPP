@@ -19,7 +19,7 @@ namespace HighscoreDatabase
 		{
 			if (arguments.size() == 0)
 			{
-				std::cout << GetUsage() << std::endl;
+				std::cout << GetUsage() << std::endl << std::endl;
 				return;
 			}
 
@@ -28,12 +28,12 @@ namespace HighscoreDatabase
 			if (StartsWith(arg, "score"))
 			{
 				db->SortByScore();
-				std::cout << "Sorted players by score" << std::endl;
+				std::cout << "Sorted players by score" << std::endl << std::endl;
 			}
 			else if (StartsWith(arg, "name") || StartsWith(arg, "username"))
 			{
 				db->SortByUsername();
-				std::cout << "Sorted players by username" << std::endl;
+				std::cout << "Sorted players by username" << std::endl << std::endl;
 			}
 			else
 				std::cout << GetUsage() << std::endl;			

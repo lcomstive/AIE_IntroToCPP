@@ -4,6 +4,9 @@
 
 namespace TicTacToe
 {
+	/// <summary>
+	/// Game parameters to pass during the creation of the Game class
+	/// </summary>
 	struct GameArgs
 	{
 	public:
@@ -23,9 +26,20 @@ namespace TicTacToe
 
 		// GETTERS //
 		bool IsRunning();
+
+		/// <returns>Board width, same as height</returns>
 		int GetBoardSize();
+
+		/// <returns>Human player count</returns>
 		int GetPlayerCount();
+
+		/// <returns>AI player count</returns>
 		int GetAIPlayerCount();
+
+		/// <returns>Human & AI player count</returns>
+		int GetTotalPlayerCount();
+
+		/// <returns>Player taking turn</returns>
 		int GetCurrentPlayer();
 
 		// GAME FUNCTIONS //
@@ -57,22 +71,48 @@ namespace TicTacToe
 		void Exit();
 
 	private:
-		enum class PlayerType { Player, AI };
+		enum class PlayerType : char { Player, AI };
 
+		/// <summary>
+		/// 2D Array of integers.
+		/// Each int is the player who has placed a piece there, or -1 if no piece is placed
+		/// </summary>
 		unsigned int** m_Board;
+
+		/// <summary>
+		/// True while game loop is currently executing
+		/// </summary>
 		bool m_Running;
+
+		/// <summary>
+		/// Subtext for extra information (errors, last turn taken, etc.)
+		/// </summary>
 		std::string m_DetailText;
+
+		/// <summary>
+		/// Player count is determined by the size of this vector.
+		/// Determines whether player at vector index is human or computer
+		/// </summary>
 		std::vector<PlayerType> m_PlayerTypes;
-		unsigned int m_CurrentTurn,
-			m_PlayerCount,
-			m_AIPlayerCount,
-			m_BoardSize,
-			m_AvailableSpots;
+
+		unsigned int m_BoardSize,		// Width of board (also height, as board is square)
+					 m_CurrentTurn,		// Which player's turn is it - corresponds with m_PlayerTypes
+					 m_PlayerCount,		// Number of human players. Equal to number of PlayerType::Player's in m_PlayerTypes
+					 m_AIPlayerCount,	// Number of computer players. Equal to number of PlayerType::AI's in m_PlayerTypes
+					 m_AvailableSpots,	// How many cells are left untouched by a player. When equal to 0 the board is full, often indicating a draw
+					 m_TotalPlayers;	// Number of combined human and computer players
 
 		void AITurn();
-		void DrawBoard();
-		void DrawControls();
+		void DrawBoard(); // Draw board to current position in console
+		void DrawControls(); // Draw controls at current position in console
+		void DisplayVictoryScreen(int winner); // Shows which player won and prompts user 'Do you want to play again'
+
+		/// <summary>
+		/// Checks if `player` has won the game.
+		///
+		/// If `checkX` and `checkY` are within board bounds, checks win condition as
+		/// if player has a piece there as well.
+		/// </summary>
 		bool CheckWinConditions(unsigned int player, unsigned int checkX = 99999, unsigned int checkY = 99999);
-		void DisplayVictoryScreen(int winner);
 	};
 }

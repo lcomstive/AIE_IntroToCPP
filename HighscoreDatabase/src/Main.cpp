@@ -40,41 +40,12 @@ string GetArgument(int argc, char** argv, const string& option)
 
 const int ConsolePrintMaxPlayers = 500; // Console will only print up to this amount of players
 const int RandomScoreMin = 10, RandomScoreMax = 99;
-const vector<string> RandomUsernames =
-{
-	"Lewis",
-	"Marcus",
-	"James",
-	"Terrell",
-	"Lemon Man",
-	"Avocado",
-	"Ryz",
-	"Klemze",
-	"Ricky",
-	"Ryzer",
-	"Squidzer",
-	"Squidbomb",
-	"Mason",
-	"AHHHHHHHHHHHHHHH",
-	"blue6402",
-	"JANO",
-	"JONO",
-	"Marc",
-	"Poggers",
-	"Poogers",
-	"Boogers"
-};
 
 int RandomModifier = 0;
 int GetRandomScore()
 {
 	srand((unsigned int)time(NULL) * RandomModifier++); // Yay pseudorandomness
 	return rand() % RandomScoreMax + RandomScoreMin;
-}
-string GetRandomUsername()
-{
-	srand((unsigned int)time(NULL) * RandomModifier++); // Yay pseudorandomness
-	return RandomUsernames[rand() % RandomUsernames.size()];
 }
 
 int main(int argc, char** argv)
@@ -96,11 +67,6 @@ int main(int argc, char** argv)
 
 	commands.push_back(new CommandHelp(&db, &commands));
 	commands.push_back(new CommandExit(&db, &shouldExit));
-
-	// Initialize database if empty
-	if (db.GetPlayerCount() == 0)
-		for (int i = 0; i < (int)round(MaxPlayers * 0.75); i++)
-			db.AddPlayer(GetRandomUsername(), GetRandomScore());
 
 	vector<PlayerData*> createdPlayers;
 

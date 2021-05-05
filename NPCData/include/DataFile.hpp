@@ -1,9 +1,10 @@
 #pragma once
 
-#include "raylib.h"
 #include <string>
 #include <vector>
 #include <fstream>
+#include <raylib.h>
+#include <iostream>
 
 using namespace std;
 
@@ -23,8 +24,6 @@ Saved Records Format
 		int	age				Value of Record.age
 
 */
-
-#include <iostream>
 
 class DataFile
 {
@@ -46,6 +45,9 @@ public:
 			if (image.width <= 0 || image.height <= 0)
 				return;
 			UnloadTexture(m_Texture);
+
+			if (image.data)
+				RL_FREE(image.data);
 		}
 
 		void SetImage(Image& i)
@@ -65,16 +67,13 @@ public:
 private:
 	ifstream m_File;
 	string m_Filepath;
-	unsigned int m_RecordCount;
-	vector<unsigned int> m_RecordSizes;
 
 	Record* m_CurrentRecord;
+	unsigned int m_RecordCount;
 	unsigned int m_CurrentRecordIndex;
+	vector<streampos> m_RecordOffsets;
 
 	Record* ReadRecord();
-
-	void SkipNextRecord(int count);
-	void SkipPreviousRecord(int count);
 
 public:
 	DataFile(const string m_Filepath);

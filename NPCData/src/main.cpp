@@ -30,8 +30,15 @@ int main(int argc, char* argv[])
 	while (!WindowShouldClose())    // Detect window close button or ESC key
 	{
 		// Get user input
-		int indexChange = -1 * IsKeyPressed(KEY_LEFT) + IsKeyPressed(KEY_RIGHT); // -1 for left, 0 for no change, 1 for right
-		int newIndex = clamp(currentRecordIdx + indexChange, 0, data.GetRecordCount() - 1); // Add the change to index and clamp
+		int newIndex = currentRecordIdx;
+		for (int i = KEY_ONE; i < KEY_NINE; i++)
+		{
+			if (IsKeyPressed(i))
+				newIndex = i - KEY_ONE;
+		}
+		newIndex += -1 * IsKeyPressed(KEY_LEFT) + IsKeyPressed(KEY_RIGHT); // -1 for left, 0 for no change, 1 for right
+		newIndex = clamp(newIndex, 0, data.GetRecordCount() - 1); // Clamp selected index within appropriate bounds
+
 		if (newIndex != currentRecordIdx) // Check if record index has changed
 		{
 			currentRecordIdx = newIndex;

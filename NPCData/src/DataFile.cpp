@@ -3,7 +3,7 @@
 
 using namespace std;
 
-DataFile::DataFile(const string path) : m_Filepath(path), m_CurrentRecord(nullptr), m_CurrentRecordIndex(0), m_RecordSizes()
+DataFile::DataFile(const string path) : m_Filepath(path), m_CurrentRecord(nullptr), m_CurrentRecordIndex(0), m_RecordOffsets()
 {
 	m_File = ifstream(m_Filepath, ios::binary);
 
@@ -11,6 +11,21 @@ DataFile::DataFile(const string path) : m_Filepath(path), m_CurrentRecord(nullpt
 	m_RecordCount = 0;
 	m_File.read((char*)&m_RecordCount, sizeof(int));
 
+	// Read through all records once to get offsets
+	for (unsigned int i = 0; i < m_RecordCount; i++)
+	{
+		// Store the current offset
+		m_RecordOffsets.push_back(m_File.tellg());
+
+		// Read passed the next record
+		// This method deletes the last read record, so only one is ever stored in memory
+		ReadRecord();
+	}
+
+	// Back to first
+	m_File.seekg(m_RecordOffsets[0]);
+
+	// This method deletes the last read record, so only one is ever stored in memory
 	ReadRecord();
 }
 
@@ -114,9 +129,9 @@ DataFile::Record* DataFile::ReadRecord()
 
 	int imageWidth, imageHeight, nameSize;
 	m_CurrentRecord = new Record();
-	size_t originalPosition = (size_t)m_File.tellg();
+
 	cout << "Current Record Index: " << m_CurrentRecordIndex << endl;
-	cout << "Read Current Position: " << originalPosition << endl;
+	cout << "Read Current Position Before: " << m_File.tellg() << endl;
 
 	m_File.read((char*)&imageWidth, sizeof(int));
 	m_File.read((char*)&imageHeight, sizeof(int));
@@ -135,14 +150,10 @@ DataFile::Record* DataFile::ReadRecord()
 	m_CurrentRecord->name = string(nameRaw, nameRaw + nameSize);
 	m_File.read((char*)&m_CurrentRecord->age, sizeof(int));
 
-	originalPosition = (size_t)m_File.tellg() - originalPosition;
-	cout << "Read Current Size: " << originalPosition << endl;
+	cout << "Read Current Position After: " << m_File.tellg() << endl;
 
 	delete[] imageRaw;
 	delete[] nameRaw;
-
-	if (m_RecordSizes.size() <= m_CurrentRecordIndex)
-		m_RecordSizes.push_back((unsigned int)originalPosition);
 
 	return m_CurrentRecord;
 }
@@ -154,59 +165,16 @@ DataFile::Record* DataFile::GetPreviousRecord()
 	if (m_CurrentRecordIndex == 0)
 		return m_CurrentRecord; // No records before current
 
-	unsigned int currentPos = (unsigned int)m_File.tellg() - m_RecordSizes[--m_CurrentRecordIndex];
-	m_File.seekg(currentPos); // Read to start of current record
-
-	currentPos -= m_RecordSizes[m_CurrentRecordIndex - 1];
-	m_File.seekg(currentPos); // Read to start of previous record
+	m_File.seekg(m_RecordOffsets[m_RecordCount -= 2]);
 	return ReadRecord();
-}
-
-void DataFile::SkipNextRecord(int count)
-{
-	for (int i = 0; i < count; i++)
-	{
-		m_CurrentRecordIndex++;
-		ReadRecord();
-	}
-}
-
-void DataFile::SkipPreviousRecord(int count)
-{
-	if (m_CurrentRecordIndex == 0)
-		return; // None found before current
-
-	unsigned int seekPos = sizeof(int); // Skip sizeof(int)
-	for(int i = 0; i < (m_CurrentRecordIndex - count); i++)
-
-
-	unsigned int seekPos = (unsigned int)m_File.tellg() - m_RecordSizes[m_CurrentRecordIndex];
-	m_File.seekg(seekPos); // Read to start of current record
-	cout << "Seeking back to " << seekPos << " [" << m_RecordSizes[m_CurrentRecordIndex] << "]" << endl;
-
-	for (int i = 0; i < count; i++)
-	{
-		seekPos -= m_RecordSizes[--m_CurrentRecordIndex];
-		m_File.seekg(seekPos); // Read to start of previous record
-		cout << "Seeking back to " << seekPos << " [" << m_RecordSizes[m_CurrentRecordIndex] << "]" << endl;
-
-		if (m_CurrentRecordIndex == 0)
-			return; // Back at start of file
-	}
 }
 
 DataFile::Record* DataFile::GetRecord(unsigned int index)
 {
-	int delta = index - m_CurrentRecordIndex;
+	if (index >= m_RecordCount) index = m_RecordCount - 1; // Last record
+	if (index == m_CurrentRecordIndex) return m_CurrentRecord; // No change
 
-	cout << "DELTA: " << delta << " [" << m_CurrentRecordIndex << "]" << endl;
-	if (delta == 0)
-		return m_CurrentRecord;
-
-	if (delta > 0)
-		SkipNextRecord(delta - 1);
-	else
-		SkipPreviousRecord(abs(delta));
-
-	return (m_CurrentRecord = ReadRecord());
+	m_File.seekg(m_RecordOffsets[index]);
+	m_CurrentRecordIndex = index;
+	return ReadRecord();
 }
