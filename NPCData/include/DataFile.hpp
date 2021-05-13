@@ -30,38 +30,18 @@ class DataFile
 public:
 	struct Record
 	{
-	private:
-		Texture2D m_Texture;
-
-	public:
 		Image image;
 		string name;
 		int age;
 
-		Record() : image({ 0 }), m_Texture({}), name(""), age(0) { }
+		Record();
+		~Record();
 
-		~Record()
-		{
-			if (image.width <= 0 || image.height <= 0)
-				return;
-			UnloadTexture(m_Texture);
+		Texture2D GetTexture();
+		void SetImage(Image& i);
 
-			if (image.data)
-				RL_FREE(image.data);
-		}
-
-		void SetImage(Image& i)
-		{
-			image = i;
-			m_Texture = LoadTextureFromImage(image);
-		}
-
-		Texture2D GetTexture()
-		{
-			if (!image.data || image.width <= 0 || image.height <= 0)
-				return { }; // `image`, and consequently `m_Texture`, have not been set
-			return m_Texture;
-		}
+	private:
+		Texture2D m_Texture;
 	};
 
 private:

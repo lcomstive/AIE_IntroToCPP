@@ -5,7 +5,12 @@ include_directories(
 	../raylib/include
 	)
 
-add_executable(NPCData src/main.cpp src/DataFile.cpp include/DataFile.hpp)
+add_executable(NPCData
+				src/main.cpp
+				src/Record.cpp
+				src/DataFile.cpp
+				include/DataFile.hpp
+			  )
 target_link_libraries(NPCData raylib)
 
 add_custom_command(

@@ -15,6 +15,7 @@ string GetArgument(int argc, char** argv, const string& option)
 		if (arg.find(option) == 0)
 			return arg.substr(option.size() + 1);
 	}
+
 	return "";
 }
 
