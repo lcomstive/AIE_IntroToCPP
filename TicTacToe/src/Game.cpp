@@ -300,7 +300,7 @@ void Game::AITurn()
 #ifdef _WIN32
 	Sleep(AITurnSpeed);
 #elif __unix__ || __APPLE__
-	sleep(AITurnSpeed);
+	usleep(AITurnSpeed * 1000);
 #endif
 
 	// Check for any wins if AI places piece
