@@ -43,10 +43,10 @@ int main(int argc, char** argv)
 	Game game(args);
 	int boardSize = game.GetBoardSize();
 
-	wstring title = L"Tic Tac Toe Game - Lewis Comstive";
-	title += L" (" + to_wstring(boardSize) + L"x" + to_wstring(boardSize) + L")";
-	title += L" (Players: " + to_wstring(game.GetPlayerCount()) + L")";
-	title += L"(AI: " + to_wstring(game.GetAIPlayerCount()) + L")";
+	string title = "Tic Tac Toe Game - Lewis Comstive";
+	title += " (" + to_string(boardSize) + "x" + to_string(boardSize) + ")";
+	title += " (Players: " + to_string(game.GetPlayerCount()) + ")";
+	title += "(AI: " + to_string(game.GetAIPlayerCount()) + ")";
 
 	Console::SetTitle(title);
 

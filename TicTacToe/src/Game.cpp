@@ -111,7 +111,6 @@ void Game::Draw()
 	if (!m_Running)
 		return;
 
-	Console::ChangeColour(ConsoleColour::White);
 	Console::Clear();
 
 	DrawControls();
@@ -120,20 +119,14 @@ void Game::Draw()
 	cout << m_DetailText << endl;
 
 	// Input Prompt text
-	cout << "Player " << (m_CurrentTurn + 1) << " (";
-	Console::ChangeColour(PlayerChars[m_CurrentTurn].Colour);
-	cout << PlayerChars[m_CurrentTurn].Symbol;
-	Console::ChangeColour(ConsoleColour::White);
-	cout << ")" << endl;
-	
+	Console::Write("Player " + to_string(m_CurrentTurn + 1) + "(");
+	Console::Write(PlayerChars[m_CurrentTurn].Symbol, PlayerChars[m_CurrentTurn].Colour);
+	Console::WriteLine(")");
+
 	// Check player type
 	if (m_PlayerTypes[m_CurrentTurn] == PlayerType::Player)
-	{
 		// Prompt for user input
-		Console::ChangeColour(ConsoleColour::Grey);
-		cout << " -> ";
-		Console::ChangeColour(ConsoleColour::White);
-	}
+		Console::Write(" -> ", ConsoleColour::Grey);
 	else
 	{
 		// Computer turn
@@ -146,8 +139,8 @@ void Game::Draw()
 
 void Game::DrawControls()
 {
-	cout << "Standard Tic-Tac-Toe Rules" << endl;
-	cout << "Input co-ordinates to place your piece, as a letter-number combination (e.g. A2, C3)" << endl << endl;
+	Console::WriteLine("Standard Tic-Tac-Toe Rules", ConsoleColour::Grey);
+	Console::WriteLine("Input co-ordinates to place your piece, as a letter-number combination (e.g. A2, C3)\n", ConsoleColour::Grey);
 }
 
 bool Game::SpotAvailable(unsigned int x, unsigned int y)
@@ -173,11 +166,13 @@ void Game::DrawBoard()
 	//   A  B  C  D  E
 	//
 	cout << "   ";
-	Console::ChangeColour(ConsoleColour::DarkYellow);
 	for (unsigned int i = 0; i < m_BoardSize; i++)
-		cout << "  " << char('A' + i) << " ";
+	{
+		cout << "  ";
+		Console::Write(char('A' + i), ConsoleColour::DarkYellow);
+		cout << " ";
+	}
 	cout << endl << "   ";
-	// Console::ChangeColour(ConsoleColour::White);
 
 	// Draw top of board
 	// e.g.
@@ -203,9 +198,7 @@ void Game::DrawBoard()
 	//
 	for (unsigned int x = 0; x < m_BoardSize; x++)
 	{
-		Console::ChangeColour(ConsoleColour::DarkYellow);
-		cout << (x < 9 ? " " : "") << (x + 1);
-		Console::ChangeColour(ConsoleColour::White);
+		Console::Write((x < 9 ? " " : "") + to_string(x + 1), ConsoleColour::DarkYellow);
 		cout << u8" \u2502 "; // │
 
 		for (unsigned int y = 0; y < m_BoardSize; y++)
@@ -217,9 +210,7 @@ void Game::DrawBoard()
 				continue;
 			}
 
-			Console::ChangeColour(PlayerChars[playerPiece].Colour);
-			cout << PlayerChars[playerPiece].Symbol;
-			Console::ChangeColour(ConsoleColour::White);
+			Console::Write(PlayerChars[playerPiece].Symbol, PlayerChars[playerPiece].Colour);
 
 			cout << u8" \u2502 "; // │
 		}
@@ -241,7 +232,6 @@ void Game::DrawBoard()
 		else
 			cout << u8"\u2500"; // ─
 	}
-	Console::ChangeColour(ConsoleColour::White);
 	cout << endl;
 }
 
@@ -417,9 +407,7 @@ void Game::DisplayVictoryScreen(int winner)
 	{
 		cout << endl << "Player " << (winner + 1) << " (";
 
-		Console::ChangeColour(PlayerChars[winner].Colour);
-		cout << PlayerChars[winner].Symbol;
-		Console::ChangeColour(ConsoleColour::White);
+		Console::Write(PlayerChars[winner].Symbol, PlayerChars[winner].Colour);
 
 		cout << ") won!" << endl << endl;
 	}

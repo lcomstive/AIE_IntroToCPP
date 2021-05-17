@@ -1,9 +1,7 @@
 /*
 *
 * A class to control the console, e.g. clearing and moving cursor
-* 
-* CURRENTLY ALL UNIX CODE IS UNTESTED
-* 
+*
 */
 
 #pragma once
@@ -11,7 +9,6 @@
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
-#elif __unix__ || __APPLE__
 #endif
 
 #include <string>
@@ -20,6 +17,25 @@ namespace TicTacToe
 {
 	enum class ConsoleColour : unsigned int
 	{
+		Unchanged = 9999,
+
+#if __unix__ || __APPLE__
+		Black       = 30,
+		DarkBlue    = 34,
+		DarkGreen   = 32,
+		DarkCyan    = 36,
+		DarkRed     = 31,
+		DarkMagenta = 35,
+		DarkYellow  = 33,
+		Grey        = 90,
+		Blue        = 94,
+		Green       = 92,
+		Cyan        = 96,
+		Red         = 91,
+		Magenta     = 95,
+		Yellow      = 93,
+		White       = 37
+#else
 		Black		= 0,
 		DarkBlue	= 1,
 		DarkGreen	= 2,
@@ -35,6 +51,7 @@ namespace TicTacToe
 		Magenta		= 13,
 		Yellow		= 14,
 		White		= 15
+#endif
 	};
 
 	class Console
@@ -42,13 +59,21 @@ namespace TicTacToe
 	public:
 		static void Clear();
 
-		static void SetTitle(std::wstring title);
+		static void SetTitle(std::string title);
 		static void SetCursorPos(int x, int y);
-		static void GetCursorPos(int* x, int* y);
+		static void GetCursorPos(int* x, int* y); // Untested
 		static void GetScreenSize(int* width, int* height);
 
+		/*
 		static void ChangeColour(ConsoleColour foreground);
 		static void ChangeColour(ConsoleColour background, ConsoleColour foreground);
+		*/
+
+		static void Write(char letter, ConsoleColour foreground = ConsoleColour::White, ConsoleColour background = ConsoleColour::Unchanged);
+		static void WriteLine(char letter, ConsoleColour foreground = ConsoleColour::White, ConsoleColour background = ConsoleColour::Unchanged);
+
+		static void Write(std::string text, ConsoleColour foreground = ConsoleColour::White, ConsoleColour background = ConsoleColour::Unchanged);
+		static void WriteLine(std::string text, ConsoleColour foreground = ConsoleColour::White, ConsoleColour background = ConsoleColour::Unchanged);
 
 	private:
 #if _WIN32
@@ -61,8 +86,6 @@ namespace TicTacToe
 		/// </summary>
 		/// <returns></returns>
 		static CONSOLE_SCREEN_BUFFER_INFO GetScreenBufferInfo();
-#elif __unix__ || __APPLE__
-
 #endif
 
 		/// <summary>
@@ -70,10 +93,5 @@ namespace TicTacToe
 		/// Called inherently through other functions in this class
 		/// </summary>
 		static void Init();
-
-		/// <summary>
-		/// Frees resources and resets the console
-		/// </summary>
-		static void Destroy();
 	};
 }
