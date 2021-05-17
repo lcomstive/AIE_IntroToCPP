@@ -1,6 +1,6 @@
-#include <tchar.h>
 #include <stdio.h>
 #include <iostream>
+#include <fcntl.h>
 
 #include "Console.hpp"
 
@@ -8,6 +8,8 @@ using namespace std;
 using namespace TicTacToe;
 
 #ifdef _WIN32
+#include <tchar.h>
+
 HANDLE Console::s_Handle = NULL;
 WORD Console::s_Attributes = 0;
 
@@ -18,7 +20,7 @@ CONSOLE_SCREEN_BUFFER_INFO Console::GetScreenBufferInfo()
 	GetConsoleScreenBufferInfo(s_Handle, &bufferInfo);
 	return bufferInfo;
 }
-#elif __unix__
+#elif __unix__ || __APPLE__
 #include <unistd.h>		// STDOUT_FILENO
 #include <sys/ioctl.h>  // ioctl() and TIOCGWINSZ
 #endif
@@ -32,7 +34,16 @@ void Console::Init()
 
 	CONSOLE_SCREEN_BUFFER_INFO bufferInfo = GetScreenBufferInfo();
 	s_Attributes = bufferInfo.wAttributes;
-#elif __unix__
+#elif __unix__ || __APPLE__
+
+#endif
+}
+
+void Console::Destroy()
+{
+#if _WIN32
+
+#elif __unix__ || __APPLE__
 
 #endif
 }
@@ -57,8 +68,8 @@ void Console::Clear()
 		))
 		return;
 	Console::SetCursorPos(0, 0);
-#elif __unix__
-	printf("\x1B[3J\x1B[H");
+#elif __unix__ || __APPLE__
+	wprintf(L"\033[2J\033[1;1H");
 #endif
 }
 
@@ -70,13 +81,13 @@ void Console::GetScreenSize(int* width, int* height)
 	CONSOLE_SCREEN_BUFFER_INFO bufferInfo = GetScreenBufferInfo();
 	*width = bufferInfo.dwSize.X;
 	*height = bufferInfo.dwSize.Y;
-#else
+#elif __unix__ || __APPLE__
 	// https://stackoverflow.com/a/23369919
 
 	struct winsize size;
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
-	*x = size.ws_row;
-	*y = size.ws_col;
+	*width = size.ws_row;
+	*height = size.ws_col;
 #endif
 }
 
@@ -86,8 +97,8 @@ void Console::SetCursorPos(int x, int y)
 
 #ifdef _WIN32
 	SetConsoleCursorPosition(s_Handle, COORD { (SHORT)x, (SHORT)y });
-#elif __unix__
-	printf("\033[%d;%dH", y + 1, x + 1);
+#elif __unix__ || __APPLE__
+	wprintf(L"\033[%d;%dH", y + 1, x + 1);
 #endif
 }
 
@@ -99,20 +110,27 @@ void Console::GetCursorPos(int* x, int* y)
 	CONSOLE_SCREEN_BUFFER_INFO bufferInfo = GetScreenBufferInfo();
 	*x = bufferInfo.dwCursorPosition.X;
 	*y = bufferInfo.dwCursorPosition.Y;
-#elif __unix__
-	printf("\033[6n"); // Writes current cursor coordinates to terminal
-	scanf("\033[%d;%dR", x, y);
+#elif __unix__ || __APPLE__
+	wprintf(L"\033[6n"); // Writes current cursor coordinates to terminal
+	wscanf(L"\033[%d;%dR", x, y);
 #endif
 }
 
-void Console::ChangeColour(ConsoleColour foreground) { ChangeColour((ConsoleColour)(s_Attributes >> 4), foreground); }
+void Console::ChangeColour(ConsoleColour foreground)
+{
+#if _WIN32
+	ChangeColour((ConsoleColour)(s_Attributes >> 4), foreground);
+#elif __unix__ || __APPLE__
+
+#endif
+}
 void Console::ChangeColour(ConsoleColour background, ConsoleColour foreground)
 {
 	Init();
 
 #ifdef _WIN32
 	SetConsoleTextAttribute(s_Handle, ((unsigned int)background << 4) | (unsigned int)foreground);
-#elif __linux__
+#elif __unix__ || __APPLE__
 
 #endif
 }
@@ -123,7 +141,7 @@ void Console::SetTitle(wstring title)
 
 #ifdef _WIN32
 	SetConsoleTitleW(title.c_str());
-#elif __linux__
+#elif __unix__ || __APPLE__
 
 #endif
 }

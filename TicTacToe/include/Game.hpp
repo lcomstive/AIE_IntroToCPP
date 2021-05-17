@@ -21,26 +21,26 @@ namespace TicTacToe
 		const unsigned int MinBoardSize = 3;
 		const unsigned int MaxBoardSize = 26;
 
-		Game(GameArgs& arguments);
+		explicit Game(GameArgs& arguments);
 		~Game();
 
 		// GETTERS //
-		bool IsRunning();
+		bool IsRunning() const;
 
 		/// <returns>Board width, same as height</returns>
-		int GetBoardSize();
+		unsigned int GetBoardSize() const;
 
 		/// <returns>Human player count</returns>
-		int GetPlayerCount();
+		unsigned int GetPlayerCount() const;
 
 		/// <returns>AI player count</returns>
-		int GetAIPlayerCount();
+		unsigned int GetAIPlayerCount() const;
 
 		/// <returns>Human & AI player count</returns>
-		int GetTotalPlayerCount();
+		unsigned int GetTotalPlayerCount() const;
 
 		/// <returns>Player taking turn</returns>
-		int GetCurrentPlayer();
+		unsigned int GetCurrentPlayer() const;
 
 		// GAME FUNCTIONS //
 		
@@ -77,7 +77,7 @@ namespace TicTacToe
 		/// 2D Array of integers.
 		/// Each int is the player who has placed a piece there, or -1 if no piece is placed
 		/// </summary>
-		unsigned int** m_Board;
+		int** m_Board;
 
 		/// <summary>
 		/// True while game loop is currently executing

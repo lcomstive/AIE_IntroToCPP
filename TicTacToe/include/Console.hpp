@@ -11,7 +11,9 @@
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#elif __unix__ || __APPLE__
 #endif
+
 #include <string>
 
 namespace TicTacToe
@@ -59,12 +61,19 @@ namespace TicTacToe
 		/// </summary>
 		/// <returns></returns>
 		static CONSOLE_SCREEN_BUFFER_INFO GetScreenBufferInfo();
+#elif __unix__ || __APPLE__
+
 #endif
 
 		/// <summary>
-		// Fills variables, gets handles.
-		// Called inherintly through other functions in this class
+		/// Fills variables, gets handles.
+		/// Called inherently through other functions in this class
 		/// </summary>
 		static void Init();
+
+		/// <summary>
+		/// Frees resources and resets the console
+		/// </summary>
+		static void Destroy();
 	};
 }

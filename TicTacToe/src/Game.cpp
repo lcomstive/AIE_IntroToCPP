@@ -6,10 +6,14 @@
 #ifdef _WIN32
 #include <conio.h>
 #define CaptureCharacter _getch
-#elif __unix__
-#define CaptureCharacter getch
+#elif __unix__ || __APPLE__
+#include <cstdio>
+#include <stdlib.h>
+#include <unistd.h>
+
+#define CaptureCharacter getchar
 #else
-#define CaptureCharacter 
+#define CaptureCharacter getch
 #endif
 
 using namespace std;
@@ -41,16 +45,18 @@ unsigned int Clamp(unsigned int value, unsigned int min, unsigned int max)
 
 Game::Game(GameArgs& args) :
 	m_Running(true),
-	m_DetailText(""),
+	m_DetailText(),
 	m_BoardSize(args.boardSize),
 	m_PlayerCount(args.playerCount),
 	m_AIPlayerCount(args.aiPlayerCount),
+	m_CurrentTurn(0),
 	m_TotalPlayers(args.playerCount + args.aiPlayerCount)
 {
 	m_Board = nullptr;
 	m_BoardSize = Clamp(m_BoardSize, MinBoardSize, MaxBoardSize);
 	m_PlayerCount = Clamp(m_PlayerCount, 0, (unsigned int)PlayerChars.size());
-	m_AIPlayerCount = Clamp(m_AIPlayerCount, 0, (unsigned int)PlayerChars.size() - m_PlayerCount); // Amount of players & AI cannot exceed total player cound
+	m_AIPlayerCount = Clamp(m_AIPlayerCount, 0, (unsigned int)PlayerChars.size() - m_PlayerCount); // Amount of players & AI cannot exceed total player count
+	m_AvailableSpots = m_BoardSize * m_BoardSize;
 
 	// Add human and AI players
 	m_PlayerTypes.insert(m_PlayerTypes.end(), m_PlayerCount, PlayerType::Player);
@@ -73,7 +79,7 @@ void Game::Exit()
 	m_Board = nullptr;
 }
 
-bool Game::IsRunning() { return m_Running; }
+bool Game::IsRunning() const { return m_Running; }
 
 void Game::Reset()
 {
@@ -91,10 +97,10 @@ void Game::Reset()
 	m_AvailableSpots = m_BoardSize * m_BoardSize;
 
 	// Create board
-	m_Board = new unsigned int* [m_BoardSize];
+	m_Board = new int* [m_BoardSize];
 	for (unsigned int x = 0; x < m_BoardSize; x++)
 	{
-		m_Board[x] = new unsigned int[m_BoardSize];
+		m_Board[x] = new int[m_BoardSize];
 		for (unsigned int y = 0; y < m_BoardSize; y++)
 			m_Board[x][y] = -1;
 	}
@@ -171,7 +177,7 @@ void Game::DrawBoard()
 	for (unsigned int i = 0; i < m_BoardSize; i++)
 		cout << "  " << char('A' + i) << " ";
 	cout << endl << "   ";
-	Console::ChangeColour(ConsoleColour::White);
+	// Console::ChangeColour(ConsoleColour::White);
 
 	// Draw top of board
 	// e.g.
@@ -181,11 +187,11 @@ void Game::DrawBoard()
 	for (unsigned int i = 0; i < boardWidth; i++)
 	{
 		if (i == 0)
-			cout << char(218); // ┌
+			cout << u8"\u250c"; // ┌
 		else if (i == boardWidth - 1)
-			cout << char(191); // ┐
+			cout << u8"\u2510"; // ┐
 		else
-			cout << char(196); // ─
+			cout << u8"\u2500"; // ─
 	}
 	cout << endl;
 
@@ -200,14 +206,14 @@ void Game::DrawBoard()
 		Console::ChangeColour(ConsoleColour::DarkYellow);
 		cout << (x < 9 ? " " : "") << (x + 1);
 		Console::ChangeColour(ConsoleColour::White);
-		cout << " " << char(179) << " "; // │
+		cout << u8" \u2502 "; // │
 
 		for (unsigned int y = 0; y < m_BoardSize; y++)
 		{
 			int playerPiece = m_Board[x][y];
 			if (playerPiece < 0)
 			{
-				cout << "  " << char(179) << " "; // │
+				cout << u8"  \u2502 "; // │
 				continue;
 			}
 
@@ -215,7 +221,7 @@ void Game::DrawBoard()
 			cout << PlayerChars[playerPiece].Symbol;
 			Console::ChangeColour(ConsoleColour::White);
 
-			cout << " " << char(179) << " "; // │
+			cout << u8" \u2502 "; // │
 		}
 		cout << endl;
 	}
@@ -229,21 +235,21 @@ void Game::DrawBoard()
 	for (unsigned int i = 0; i < boardWidth; i++)
 	{
 		if (i == 0)
-			cout << char(192); // └
+			cout << u8"\u2514"; // └
 		else if (i == boardWidth - 1)
-			cout << char(217); // ┘
+			cout << u8"\u2518"; // ┘
 		else
-			cout << char(196); // ─
+			cout << u8"\u2500"; // ─
 	}
 	Console::ChangeColour(ConsoleColour::White);
 	cout << endl;
 }
 
-int Game::GetBoardSize() { return m_BoardSize; }
-int Game::GetPlayerCount() { return m_PlayerCount; }
-int Game::GetCurrentPlayer() { return m_CurrentTurn; }
-int Game::GetAIPlayerCount() { return m_AIPlayerCount; }
-int Game::GetTotalPlayerCount() { return m_TotalPlayers; }
+unsigned int Game::GetBoardSize() const { return m_BoardSize; }
+unsigned int Game::GetPlayerCount() const { return m_PlayerCount; }
+unsigned int Game::GetCurrentPlayer() const { return m_CurrentTurn; }
+unsigned int Game::GetAIPlayerCount() const { return m_AIPlayerCount; }
+unsigned int Game::GetTotalPlayerCount() const { return m_TotalPlayers; }
 
 void Game::TakeTurn(unsigned int row, unsigned int column)
 {
@@ -265,7 +271,7 @@ void Game::TakeTurn(unsigned int row, unsigned int column)
 	m_DetailText = "Previous turn was " + string(1, char('A' + column)) + to_string(row + 1) + " (" + string(1, PlayerChars[m_CurrentTurn].Symbol) + ")";
 
 	// Set piece at coordinate to player
-	m_Board[row][column] = m_CurrentTurn;
+	m_Board[row][column] = (int)m_CurrentTurn;
 	m_AvailableSpots--;
 
 	// Check if the player won this turn
@@ -293,7 +299,7 @@ void Game::AITurn()
 	// Simulate the computer 'thinking' before taking its turn
 #ifdef _WIN32
 	Sleep(AITurnSpeed);
-#elif __unix__
+#elif __unix__ || __APPLE__
 	sleep(AITurnSpeed);
 #endif
 
@@ -338,9 +344,9 @@ void Game::AITurn()
 
 	// Select a random piece
 	static int randomCounter = 0;
-	srand((unsigned int)time(NULL) * randomCounter++); // Yay pseudorandomness
+	srand((unsigned int)time(nullptr) * randomCounter++); // Yay pseudorandomness
 
-	int randomX = 0, randomY = 0;
+	unsigned int randomX = 0, randomY = 0;
 	while (!SpotAvailable(randomX = rand() % m_BoardSize, randomY = rand() % m_BoardSize));
 
 	TakeTurn(randomX, randomY);
@@ -388,7 +394,7 @@ bool Game::CheckWinConditions(unsigned int player, unsigned int checkX, unsigned
 			return true;
 	}
 
-	// Check top-right to bottom-leftdiagonal
+	// Check top-right to bottom-left diagonal
 	for (unsigned int i = 0; i < m_BoardSize; i++)
 	{
 		bool modifiedPiece = checkX < m_BoardSize && checkX == (m_BoardSize - i - 1) &&
