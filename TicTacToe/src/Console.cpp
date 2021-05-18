@@ -113,7 +113,11 @@ void Console::GetCursorPos(int* x, int* y)
 void Console::Write(std::string text, ConsoleColour foreground, ConsoleColour background)
 {
 #if _WIN32
-	SetConsoleTextAttribute(s_Handle, ((unsigned int)background << 4) | (unsigned int) foreground);
+	unsigned int colour = (unsigned int)foreground;
+	if(background != ConsoleColour::Unchanged)
+		colour = ((unsigned int)background << 4) | colour;
+
+	SetConsoleTextAttribute(s_Handle, colour);
 	cout << text;
 	SetConsoleTextAttribute(s_Handle, s_Attributes);
 #elif __unix__ || __APPLE__

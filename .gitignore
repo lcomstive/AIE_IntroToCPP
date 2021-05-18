@@ -5,3 +5,10 @@ obj/
 
 # Mac OS meta files
 .DS_Store
+
+# Jetbrains IDEs
+.idea/
+
+# Misc.
+[Tt]mp/
+[Tt]emp/

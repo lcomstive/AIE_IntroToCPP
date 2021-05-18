@@ -64,11 +64,6 @@ namespace TicTacToe
 		static void GetCursorPos(int* x, int* y); // Untested
 		static void GetScreenSize(int* width, int* height);
 
-		/*
-		static void ChangeColour(ConsoleColour foreground);
-		static void ChangeColour(ConsoleColour background, ConsoleColour foreground);
-		*/
-
 		static void Write(char letter, ConsoleColour foreground = ConsoleColour::White, ConsoleColour background = ConsoleColour::Unchanged);
 		static void WriteLine(char letter, ConsoleColour foreground = ConsoleColour::White, ConsoleColour background = ConsoleColour::Unchanged);
 
