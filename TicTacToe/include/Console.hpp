@@ -1,13 +1,17 @@
 /*
-*
-* A class to control the console, e.g. clearing and moving cursor
-*
-*/
+ *
+ * AIE Introduction to C++
+ * TicTacToe
+ * Lewis Comstive (s210314)
+ *
+ * See the LICENSE file in the root directory of project for copyright.
+ *
+ */
 
 #pragma once
 
 #ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN // Try and prevent some bloat from <Windows.h>
 #include <Windows.h>
 #endif
 
@@ -54,39 +58,48 @@ namespace TicTacToe
 #endif
 	};
 
+	struct ConsoleColourCombo
+	{
+		ConsoleColour foreground = ConsoleColour::White;
+		ConsoleColour background = ConsoleColour::Unchanged;
+	};
+
+	/// Console controls
 	class Console
 	{
 	public:
 		static void Clear();
 
-		static void SetTitle(std::string title);
+		static void SetTitle(const std::string& title);
 		static void SetCursorPos(int x, int y);
-		static void GetCursorPos(int* x, int* y); // Untested
+		static void GetCursorPos(int* x, int* y); // TODO: Test this function
 		static void GetScreenSize(int* width, int* height);
 
-		static void Write(char letter, ConsoleColour foreground = ConsoleColour::White, ConsoleColour background = ConsoleColour::Unchanged);
-		static void WriteLine(char letter, ConsoleColour foreground = ConsoleColour::White, ConsoleColour background = ConsoleColour::Unchanged);
+		static void Write(const char& letter, const ConsoleColourCombo colours = { });
+		static void Write(const char& letter, const ConsoleColour foreground, const ConsoleColour background = ConsoleColour::Unchanged);
+		static void WriteLine(const char& letter = '\0', const ConsoleColour foreground = ConsoleColour::White, const ConsoleColour background = ConsoleColour::Unchanged);
 
-		static void Write(std::string text, ConsoleColour foreground = ConsoleColour::White, ConsoleColour background = ConsoleColour::Unchanged);
-		static void WriteLine(std::string text, ConsoleColour foreground = ConsoleColour::White, ConsoleColour background = ConsoleColour::Unchanged);
+		static void Write(const std::string& text, const ConsoleColourCombo colours = { });
+		static void Write(const std::string& text, const ConsoleColour foreground, const ConsoleColour background = ConsoleColour::Unchanged);
+		static void WriteLine(const std::string& text, const ConsoleColourCombo colours = {});
+		static void WriteLine(const std::string& text, const ConsoleColour foreground, const ConsoleColour background = ConsoleColour::Unchanged);
 
 	private:
 #if _WIN32
-		// WINDOWS API //
-		static WORD s_Attributes; // Stores values such as current console colour
-		static HANDLE s_Handle;	  // Handle to the console process
+		// --- WINDOWS API --- //
 
-		/// <summary>
-		/// Retrieves information on the current console buffer, which includes size and colours.
-		/// </summary>
-		/// <returns></returns>
+		/// Stores values such as current console colour
+		static WORD s_Attributes;
+
+		/// Handle to the console process
+		static HANDLE s_Handle;
+
+		/// Retrieves information regarding the console screen's font, size and colours
 		static CONSOLE_SCREEN_BUFFER_INFO GetScreenBufferInfo();
 #endif
 
-		/// <summary>
 		/// Fills variables, gets handles.
-		/// Called inherently through other functions in this class
-		/// </summary>
-		static void Init();
+		/// Called inherently through other functions in class
+		static void Initialise();
 	};
 }

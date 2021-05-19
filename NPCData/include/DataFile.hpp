@@ -56,14 +56,18 @@ private:
 	Record* ReadRecord();
 
 public:
+	/// Tries to open and read data file
 	DataFile(const string m_Filepath);
 	~DataFile();
 
+	/// \returns Total records read from file
 	unsigned int GetRecordCount();
+
+	/// \returns Index of record that is currently read into memory
 	unsigned int GetCurrentRecordIndex();
 
 	void SaveCurrentRecord();
-	void AddRecord(string imageFilename, string name, int age);
+	void AddRecord(const string& imageFilename, const string& name, const int& age);
 
 	Record* GetNextRecord();
 	Record* GetCurrentRecord();

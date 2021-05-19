@@ -7,7 +7,7 @@ using namespace std;
 using namespace TicTacToe;
 
 // "Inspired" by https://gist.github.com/plasticbox/3708a6cdfbece8cd224487f9ca9794cd
-string GetArgument(int argc, char** argv, const string& option)
+string GetArgument(const int argc, const char** argv, const string& option)
 {
 	for (int i = 0; i < argc; i++)
 	{
@@ -19,43 +19,43 @@ string GetArgument(int argc, char** argv, const string& option)
 	return "";
 }
 
-int GetArgumentInt(int argc, char** argv, const string& option)
+int GetArgumentInt(const int argc, const char** argv, const string& option)
 {
-	string raw = GetArgument(argc, argv, option);
+	const string raw = GetArgument(argc, argv, option);
 	return raw.empty() ? 0 : stoi(raw); // stoi is a C++11 feature
 }
 
-GameArgs ParseArguments(int argc, char** argv)
+GameArgs ParseArguments(const int argc, const char** argv)
 {
 	GameArgs args;
-	args.boardSize   = GetArgumentInt(argc, argv, "--board-size");
-	args.playerCount = GetArgumentInt(argc, argv, "--player-count");
-	args.aiPlayerCount = GetArgumentInt(argc, argv, "--ai-players");
+	args.BoardSize   = GetArgumentInt(argc, argv, "--board-size");
+	args.PlayerCount = GetArgumentInt(argc, argv, "--player-count");
+	args.AiPlayerCount = GetArgumentInt(argc, argv, "--ai-players");
 	return args;
 }
 
-int main(int argc, char** argv)
+int main(const int argc, const char** argv)
 {
 	GameArgs args = ParseArguments(argc, argv);
-	if ((args.playerCount + args.aiPlayerCount) < 2)
-		args.aiPlayerCount = 2 - args.playerCount; // Make sure there are at least 2 players, even if both are AI
+	if ((args.PlayerCount + args.AiPlayerCount) < 2)
+		args.AiPlayerCount = 2 - args.PlayerCount; // Make sure there are at least 2 players, even if both are AI
 
 	Game game(args);
-	int boardSize = game.GetBoardSize();
+	const unsigned int boardSize = game.GetBoardSize();
 
 	string title = "Tic Tac Toe Game - Lewis Comstive";
 	title += " (" + to_string(boardSize) + "x" + to_string(boardSize) + ")";
 	title += " (Players: " + to_string(game.GetPlayerCount()) + ")";
-	title += "(AI: " + to_string(game.GetAIPlayerCount()) + ")";
+	title += "(AI: " + to_string(game.GetAiPlayerCount()) + ")";
 
 	Console::SetTitle(title);
 
-	string previousMove = "";
+	string previousMove;
 	while (game.IsRunning())
 	{
 		game.Draw();
 
-		if (args.playerCount == 0)
+		if (args.PlayerCount == 0)
 			continue; // Don't get user input, there are no players here
 
 		string line;
@@ -70,17 +70,16 @@ int main(int argc, char** argv)
 		if (line.empty() || line.size() < 2)
 			continue; // Re-try, invalid input
 
-		int column = (int)toupper(line[0]) - 65; // 'A' = 65, getting the index of the letter
+		const int column = toupper(line[0]) - 'A'; // Get index of letter relative to first letter of (English) alphabet
 
 		string rowStr = line.substr(1);
 		if (rowStr.size() > 2)
 			rowStr = rowStr.substr(0, 2);
 		try
 		{
-			int row = stoi(rowStr) - 1;
-			game.TakeTurn(row, column);
+			game.TakeTurn(stoi(rowStr) - 1, column);
 		}
-		catch(exception e) { }
+		catch(const exception&) { }
 	}
 
 	return 0;

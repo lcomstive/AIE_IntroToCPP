@@ -1,6 +1,7 @@
 #include <map>
 #include <iostream>
 #include <Utilities.hpp>
+#include <DataStream.hpp>
 #include <PlayerDatabase.hpp>
 
 using namespace std;
@@ -41,7 +42,7 @@ void PlayerDatabase::Refresh()
 
 	for (unsigned int i = 0; i < m_PlayerCount; i++)
 	{
-		m_Players[i] = {}; // Initialize as empty struct
+		m_Players[i] = {}; // Initialise as empty struct
 		m_Players[i].Score = stream.Read<unsigned int>();
 		m_Players[i].SetUsername(stream.Read<string>());
 	}
@@ -72,7 +73,7 @@ void PlayerDatabase::Write()
 #endif
 }
 
-unsigned int PlayerDatabase::GetPlayerCount() { return m_PlayerCount; }
+unsigned int PlayerDatabase::GetPlayerCount() const { return m_PlayerCount; }
 
 PlayerData* PlayerDatabase::GetPlayer(string username)
 {

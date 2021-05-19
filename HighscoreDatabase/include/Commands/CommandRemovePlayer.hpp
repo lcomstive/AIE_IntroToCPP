@@ -1,7 +1,17 @@
+/*
+ *
+ * AIE Introduction to C++
+ * Highscore Database
+ * Lewis Comstive (s210314)
+ *
+ * See the LICENSE file in the root directory of project for copyright.
+ *
+ */
+
 #pragma once
 #include <iostream>
 #include <Utilities.hpp>
-#include <Commands/ConsoleCommands.hpp>
+#include <Commands/ConsoleCommand.hpp>
 
 namespace HighscoreDatabase
 {
@@ -10,14 +20,14 @@ namespace HighscoreDatabase
 	public:
 		CommandRemovePlayer(PlayerDatabase* db) : ConsoleCommand(db) { }
 
-		bool CheckCommand(std::string& input) { return StartsWith(input, "remove") || StartsWith(input, "delete"); }
+		bool CheckCommand(std::string& input) override { return StartsWith(input, "remove") || StartsWith(input, "delete"); }
 
-		std::string GetUsage() { return "remove|delete <username>"; }
-		std::string GetDescription() { return "Removes player from database"; }
+		std::string GetUsage() override { return "remove|delete <username>"; }
+		std::string GetDescription() override { return "Removes player from database"; }
 
-		void Execute(std::vector<std::string> arguments)
+		void Execute(std::vector<std::string> arguments) override 
 		{
-			if (arguments.size() == 0)
+			if (arguments.empty())
 			{
 				std::cout << GetUsage() << std::endl;
 				return;

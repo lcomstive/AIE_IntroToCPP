@@ -1,8 +1,18 @@
+/*
+ *
+ * AIE Introduction to C++
+ * Highscore Database
+ * Lewis Comstive (s210314)
+ *
+ * See the LICENSE file in the root directory of project for copyright.
+ *
+ */
+
 #pragma once
 #include <vector>
 #include <iostream>
 #include <Utilities.hpp>
-#include <Commands/ConsoleCommands.hpp>
+#include <Commands/ConsoleCommand.hpp>
 
 namespace HighscoreDatabase
 {
@@ -14,12 +24,12 @@ namespace HighscoreDatabase
 	public:
 		CommandHelp(PlayerDatabase* db, std::vector<ConsoleCommand*>* commands) : ConsoleCommand(db), m_Commands(commands) { }
 
-		bool CheckCommand(std::string& input) { return StartsWith(input, "help") || StartsWith(input, "?"); }
+		bool CheckCommand(std::string& input) override { return StartsWith(input, "help") || StartsWith(input, "?"); }
 
-		std::string GetUsage() { return "help"; }
-		std::string GetDescription() { return "Shows all available commands"; }
+		std::string GetUsage() override { return "help"; }
+		std::string GetDescription() override { return "Shows all available commands"; }
 
-		void Execute(std::vector<std::string> arguments)
+		void Execute(std::vector<std::string> arguments) override
 		{
 			std::cout << "Usage parameters: <> are required, () are required" << std::endl << std::endl;
 

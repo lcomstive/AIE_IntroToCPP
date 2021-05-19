@@ -4,7 +4,7 @@
 #include "Console.hpp"
 
 #ifdef _WIN32
-#include <conio.h>
+#include <conio.h> // Console I/O
 #define CaptureCharacter _getch
 #elif __unix__ || __APPLE__
 #include <cstdio>
@@ -19,23 +19,62 @@
 using namespace std;
 using namespace TicTacToe;
 
-const int AITurnSpeed = 200; // Milliseconds
+#ifdef TTT_UTF8_SUPPORT
+// BARS //
+const string BoardVerticalBar   = u8"\u2502"; // │
+const string BoardHorizontalBar = u8"\u2500"; // ─
 
+// TOP //
+const string BoardTopLeft       = u8"\u250c"; // ┌
+const string BoardTopRight      = u8"\u2510"; // ┐
+
+// BOTTOM //
+const string BoardBottomLeft    = u8"\u2514"; // └
+const string BoardBottomRight   = u8"\u2518"; // ┘
+#else
+// BARS //
+const string BoardVerticalBar   = "|"; // │
+const string BoardHorizontalBar = "-"; // ─
+
+// TOP //
+const string BoardTopLeft       = "+"; // ┌
+const string BoardTopRight      = "+"; // ┐
+
+// BOTTOM //
+const string BoardBottomLeft    = "+"; // └
+const string BoardBottomRight   = "+"; // ┘
+#endif
+
+/// Computer player simulated thinking time, in milliseconds
+const int AiTurnSpeed = 200;
+
+/// Player piece data
 struct PlayerCharacter
 {
-public:
-	char Symbol;
+	string Symbol;
 	ConsoleColour Colour;
 };
 
-const vector<PlayerCharacter> PlayerChars = {
-	{ 'X', ConsoleColour::Red	  },
-	{ 'O', ConsoleColour::Blue    },
-	{ '@', ConsoleColour::Cyan	  },
-	{ '*', ConsoleColour::Magenta },
-	{ '+', ConsoleColour::Green	  }
+static const vector<PlayerCharacter> PlayerPieces = {
+#ifdef TTT_UTF8_SUPPORT
+	{ "X"       , ConsoleColour::Red     }, // X (Cross)
+	{ "O"       , ConsoleColour::Blue    }, // O (Nought)
+	{ u8"\u002b", ConsoleColour::Cyan    }, // + (Addition Sign)
+	{ u8"\u25ca", ConsoleColour::Yellow  }, // ◊ (Lozenge)
+	{ u8"\u25cb", ConsoleColour::Green   }  // ○ (Circle)
+#else
+	{ "X", ConsoleColour::Red     },
+	{ "O", ConsoleColour::Blue    },
+	{ "@", ConsoleColour::Cyan    },
+	{ "*", ConsoleColour::Magenta },
+	{ "+", ConsoleColour::Green   }
+#endif
 };
 
+static const ConsoleColour RowsColour = ConsoleColour::Yellow;
+static const ConsoleColour ColumnsColour = ConsoleColour::Yellow;
+
+/// Constrains a value between <code>min</code> and <code>max</code>
 unsigned int Clamp(unsigned int value, unsigned int min, unsigned int max)
 {
 	if (value < min) return min;
@@ -43,25 +82,24 @@ unsigned int Clamp(unsigned int value, unsigned int min, unsigned int max)
 	return value;
 }
 
-Game::Game(GameArgs& args) :
+Game::Game(const GameArgs& args) :
 	m_Running(true),
-	m_DetailText(),
-	m_BoardSize(args.boardSize),
-	m_PlayerCount(args.playerCount),
-	m_AIPlayerCount(args.aiPlayerCount),
 	m_CurrentTurn(0),
-	m_TotalPlayers(args.playerCount + args.aiPlayerCount)
+	m_BoardSize(args.BoardSize),
+	m_PlayerCount(args.PlayerCount),
+	m_AIPlayerCount(args.AiPlayerCount),
+	m_TotalPlayers(args.PlayerCount + args.AiPlayerCount)
 {
-	m_Board = nullptr;
+	m_Board = nullptr; // Gets initialised in Reset()
 	m_BoardSize = Clamp(m_BoardSize, MinBoardSize, MaxBoardSize);
-	m_PlayerCount = Clamp(m_PlayerCount, 0, (unsigned int)PlayerChars.size());
-	m_AIPlayerCount = Clamp(m_AIPlayerCount, 0, (unsigned int)PlayerChars.size() - m_PlayerCount); // Amount of players & AI cannot exceed total player count
-	m_AvailableSpots = m_BoardSize * m_BoardSize;
+	m_PlayerCount = Clamp(m_PlayerCount, 0, static_cast<unsigned int>(PlayerPieces.size()));
+	m_AIPlayerCount = Clamp(m_AIPlayerCount, 0, static_cast<unsigned int>(PlayerPieces.size()) - m_PlayerCount); // Amount of players & AI cannot exceed total player count
 
 	// Add human and AI players
 	m_PlayerTypes.insert(m_PlayerTypes.end(), m_PlayerCount, PlayerType::Player);
 	m_PlayerTypes.insert(m_PlayerTypes.end(), m_AIPlayerCount, PlayerType::AI);
 
+	m_AvailableSpots = m_BoardSize * m_BoardSize;
 	Reset();
 }
 
@@ -96,7 +134,7 @@ void Game::Reset()
 	m_DetailText = "";
 	m_AvailableSpots = m_BoardSize * m_BoardSize;
 
-	// Create board
+	// Create game board, setting all pieces to -1 to represent empty cells
 	m_Board = new int* [m_BoardSize];
 	for (unsigned int x = 0; x < m_BoardSize; x++)
 	{
@@ -116,11 +154,11 @@ void Game::Draw()
 	DrawControls();
 	DrawBoard();
 
-	cout << m_DetailText << endl;
+	Console::WriteLine(m_DetailText);
 
 	// Input Prompt text
 	Console::Write("Player " + to_string(m_CurrentTurn + 1) + "(");
-	Console::Write(PlayerChars[m_CurrentTurn].Symbol, PlayerChars[m_CurrentTurn].Colour);
+	Console::Write(PlayerPieces[m_CurrentTurn].Symbol, PlayerPieces[m_CurrentTurn].Colour);
 	Console::WriteLine(")");
 
 	// Check player type
@@ -130,7 +168,7 @@ void Game::Draw()
 	else
 	{
 		// Computer turn
-		cout << " AI" << endl;
+		Console::WriteLine("AI", ConsoleColour::Grey);
 
 		AITurn();
 		Draw();
@@ -145,7 +183,7 @@ void Game::DrawControls()
 
 bool Game::SpotAvailable(unsigned int x, unsigned int y)
 {
-	// Invalid spot
+	// Check invalid spot
 	if (x >= m_BoardSize || y >= m_BoardSize) return false;
 
 	int result = m_Board[x][y];
@@ -157,7 +195,7 @@ void Game::DrawBoard()
 	if (!m_Board)
 		return; // Board was deleted
 
-	// Board text width with padding and other symbols
+	// Overall board text width, with padding and other symbols
 	unsigned int boardWidth = m_BoardSize * 3 + (m_BoardSize + 1);
 
 	// Draw column names
@@ -165,30 +203,24 @@ void Game::DrawBoard()
 	// 
 	//   A  B  C  D  E
 	//
-	cout << "   ";
+	Console::Write("   ");
 	for (unsigned int i = 0; i < m_BoardSize; i++)
 	{
-		cout << "  ";
-		Console::Write(char('A' + i), ConsoleColour::DarkYellow);
-		cout << " ";
+		Console::Write("  ");
+		Console::Write(char('A' + i), ColumnsColour);
+		Console::Write(" ");
 	}
-	cout << endl << "   ";
+	Console::Write("\n   ");
 
 	// Draw top of board
 	// e.g.
-	// 
+	//
 	// ┌───────────────────┐
 	//
-	for (unsigned int i = 0; i < boardWidth; i++)
-	{
-		if (i == 0)
-			cout << u8"\u250c"; // ┌
-		else if (i == boardWidth - 1)
-			cout << u8"\u2510"; // ┐
-		else
-			cout << u8"\u2500"; // ─
-	}
-	cout << endl;
+	Console::Write(BoardTopLeft);
+	for (unsigned int i = 1; i < boardWidth - 1; i++)
+		Console::Write(BoardHorizontalBar);
+	Console::WriteLine(BoardTopRight);
 
 	// Draw each board row
 	// e.g.
@@ -198,23 +230,23 @@ void Game::DrawBoard()
 	//
 	for (unsigned int x = 0; x < m_BoardSize; x++)
 	{
-		Console::Write((x < 9 ? " " : "") + to_string(x + 1), ConsoleColour::DarkYellow);
-		cout << u8" \u2502 "; // │
+		if(x < 9) Console::Write(" "); // Add whitespace for numbers under 10
+		Console::Write(to_string(x + 1), RowsColour);
+		Console::Write(" " + BoardVerticalBar + " ");
 
 		for (unsigned int y = 0; y < m_BoardSize; y++)
 		{
 			int playerPiece = m_Board[x][y];
 			if (playerPiece < 0)
 			{
-				cout << u8"  \u2502 "; // │
+				Console::Write("  " + BoardVerticalBar + " ");
 				continue;
 			}
 
-			Console::Write(PlayerChars[playerPiece].Symbol, PlayerChars[playerPiece].Colour);
-
-			cout << u8" \u2502 "; // │
+			Console::Write(PlayerPieces[playerPiece].Symbol, PlayerPieces[playerPiece].Colour);
+			Console::Write(" " + BoardVerticalBar + " ");
 		}
-		cout << endl;
+		Console::WriteLine();
 	}
 
 	// Draw bottom of board
@@ -222,23 +254,16 @@ void Game::DrawBoard()
 	// 
 	// └───────────────────┘
 	//
-	cout << "   ";
-	for (unsigned int i = 0; i < boardWidth; i++)
-	{
-		if (i == 0)
-			cout << u8"\u2514"; // └
-		else if (i == boardWidth - 1)
-			cout << u8"\u2518"; // ┘
-		else
-			cout << u8"\u2500"; // ─
-	}
-	cout << endl;
+	Console::Write("   " + BoardBottomLeft);
+	for (unsigned int i = 1; i < boardWidth - 1; i++)
+		Console::Write(BoardHorizontalBar);
+	Console::WriteLine(BoardBottomRight);
 }
 
 unsigned int Game::GetBoardSize() const { return m_BoardSize; }
 unsigned int Game::GetPlayerCount() const { return m_PlayerCount; }
 unsigned int Game::GetCurrentPlayer() const { return m_CurrentTurn; }
-unsigned int Game::GetAIPlayerCount() const { return m_AIPlayerCount; }
+unsigned int Game::GetAiPlayerCount() const { return m_AIPlayerCount; }
 unsigned int Game::GetTotalPlayerCount() const { return m_TotalPlayers; }
 
 void Game::TakeTurn(unsigned int row, unsigned int column)
@@ -258,7 +283,7 @@ void Game::TakeTurn(unsigned int row, unsigned int column)
 	}
 
 	// Let next user know what turn was taken
-	m_DetailText = "Previous turn was " + string(1, char('A' + column)) + to_string(row + 1) + " (" + string(1, PlayerChars[m_CurrentTurn].Symbol) + ")";
+	m_DetailText = "Previous turn was " + string(1, char('A' + column)) + to_string(row + 1) + " (" + PlayerPieces[m_CurrentTurn].Symbol + ")";
 
 	// Set piece at coordinate to player
 	m_Board[row][column] = (int)m_CurrentTurn;
@@ -288,9 +313,9 @@ void Game::AITurn()
 {
 	// Simulate the computer 'thinking' before taking its turn
 #ifdef _WIN32
-	Sleep(AITurnSpeed);
+	Sleep(AiTurnSpeed);
 #elif __unix__ || __APPLE__
-	usleep(AITurnSpeed * 1000);
+	usleep(AiTurnSpeed * 1000);
 #endif
 
 	// Check for any wins if AI places piece
@@ -405,18 +430,16 @@ void Game::DisplayVictoryScreen(int winner)
 
 	if (winner >= 0)
 	{
-		cout << endl << "Player " << (winner + 1) << " (";
-
-		Console::Write(PlayerChars[winner].Symbol, PlayerChars[winner].Colour);
-
-		cout << ") won!" << endl << endl;
+		Console::Write("Player " + to_string(winner + 1) + " (");
+		Console::Write(PlayerPieces[winner].Symbol, PlayerPieces[winner].Colour);
+		Console::WriteLine(") won!\n");
 	}
 	else
-		cout << endl << "It's a draw!" << endl << endl;
+		Console::WriteLine("\nIt's a draw!\n");
 
 	DrawBoard();
 
-	cout << "Do you want to play again? (Y/N)" << endl;
+	Console::WriteLine("Do you want to play again? (Y/N)");
 
 	int input = CaptureCharacter();
 	if (input == 'y' || input == 'Y')

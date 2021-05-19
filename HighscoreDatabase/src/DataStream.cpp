@@ -7,36 +7,36 @@
 using namespace std;
 using namespace HighscoreDatabase;
 
-const int DataStream::m_InitialStreamSize = 1024;
+const int DataStream::InitialStreamSize = 1024; // 1KB
 
-// CONSTRUCTORS //
+// --- CONSTRUCTORS --- //
 DataStream::DataStream(unsigned int initialSize) : m_Writing(true), m_Index(0), m_Length(initialSize), m_Data(new char[initialSize]) { }
 DataStream::DataStream(const DataStream& other) : m_Index(0), m_Writing(false)
 {
 	m_Length = other.Length();
 	m_Data = new char[m_Length];
-	memcpy(m_Data, other.m_Data, (size_t)m_Length);
+	memcpy(m_Data, other.m_Data, static_cast<size_t>(m_Length));
 }
 
 DataStream::DataStream(DataStream* other) : m_Index(0), m_Writing(false)
 {
-	m_Length = (unsigned int)other->Length();
+	m_Length = other->Length();
 	m_Data = new char[m_Length];
-	memcpy(m_Data, other->m_Data, (size_t)m_Length);
+	memcpy(m_Data, other->m_Data, static_cast<size_t>(m_Length));
 }
 
 DataStream::DataStream(vector<char>& input, unsigned int Length) : m_Index(0), m_Writing(false)
 {
-	m_Length = Length > 0 ? Length : (unsigned int)input.size();
+	m_Length = Length > 0 ? Length : static_cast<unsigned>(input.size());
 	m_Data = new char[m_Length];
-	memcpy(m_Data, input.data(), (size_t)m_Length);
+	memcpy(m_Data, input.data(), static_cast<size_t>(m_Length));
 }
 
 DataStream::DataStream(char* GetData, unsigned int Length) : m_Index(0), m_Writing(false)
 {
 	if (Length <= 0)
 	{
-#if DATASTREAM_EXCEPTIONS
+#ifdef DATASTREAM_EXCEPTIONS
 		throw exception("Length is not assigned");
 #else
 		m_Length = 0;
@@ -67,7 +67,7 @@ DataStream::DataStream(string path, unsigned int initialSize) : m_Index(0), m_Le
 	}
 
 	// Because ios::ate seeks the entire file, tellg() returns the filesize
-	unsigned int fileSize = (unsigned int)input.tellg();
+	unsigned int fileSize = input.tellg();
 
 	// Set stream position back at beginning
 	input.clear();
@@ -92,7 +92,7 @@ bool DataStream::IsReading() const { return !m_Writing; }
 bool DataStream::IsWriting() const { return m_Writing; }
 bool DataStream::IsEmpty() const { return Length() == 0; }
 unsigned int DataStream::Length() const { return IsWriting() ? m_Index : m_Length; }
-bool DataStream::IsAvailable() const { return IsWriting() ? false : m_Index < (m_Length - 1); }
+bool DataStream::IsAvailable() const { return !IsWriting() && m_Index < (m_Length - 1); }
 
 void DataStream::SetReading()
 {
@@ -118,6 +118,7 @@ void DataStream::GetData(std::vector<char>* output)
 {
 	if (!output)
 		return;
+	// Ensure output is correct size for data
 	output->resize(Length());
 	if (Length() > 0)
 		memcpy(output->data(), m_Data, Length());
@@ -130,7 +131,7 @@ void DataStream::GetData(char output[])
 	memcpy(output, m_Data, (size_t)Length());
 }
 
-// READING & WRITING //
+// --- WRITE --- //
 void DataStream::WriteToFile(string filepath)
 {
 	ofstream output(filepath, ios::binary);
@@ -150,7 +151,7 @@ void DataStream::WriteToFile(string filepath)
 	output.close();
 }
 
-void DataStream::InternalWrite(StreamType type, char* GetData, unsigned int Length)
+void DataStream::InternalWrite(StreamType type, char* data, unsigned int length)
 {
 	if (!m_Writing)
 	{
@@ -158,33 +159,36 @@ void DataStream::InternalWrite(StreamType type, char* GetData, unsigned int Leng
 		cerr << "[DataStream] Tried to write to DataStream in reading mode" << endl;
 #endif
 
-#if DATASTREAM_EXCEPTIONS
+#ifdef DATASTREAM_EXCEPTIONS
 		throw exception("Tried to write to DataStream that was in reading mode");
 #else
 		return;
 #endif
 	}
 
-	if ((Length + m_Index + 1) > m_Length)
+	// Check if m_Data is large enough for `length` more data
+	if ((length + m_Index + 1) > m_Length)
 	{
-		char* newData = new char[(size_t)m_Length + m_InitialStreamSize + Length];
+		// Expand data by copying to temp array first
+		char* newData = new char[(size_t)m_Length + InitialStreamSize + length];
 		memcpy(newData, m_Data, (size_t)m_Length);
 		delete[] m_Data;
 		m_Data = newData;
-		m_Length += m_InitialStreamSize + Length;
+		m_Length += InitialStreamSize + length;
 	}
 
 	m_Data[m_Index++] = (unsigned char)type;
-	if (type == StreamType::STRING || type == StreamType::CHARARRAY)
+	if (type == StreamType::String || type == StreamType::CharArray)
 	{
-		memcpy(m_Data + m_Index, &Length, sizeof(unsigned int));
+		memcpy(m_Data + m_Index, &length, sizeof(unsigned int));
 		m_Index += sizeof(unsigned int);
 	}
 
-	memcpy(m_Data + m_Index, GetData, Length);
-	m_Index += Length;
+	memcpy(m_Data + m_Index, data, length);
+	m_Index += length;
 }
 
+// --- READ --- //
 char* DataStream::InternalRead(StreamType expectedType, unsigned int length) { return InternalReadArray(expectedType, &length); }
 char* DataStream::InternalReadArray(StreamType expectedType, unsigned int* length)
 {
@@ -194,7 +198,7 @@ char* DataStream::InternalReadArray(StreamType expectedType, unsigned int* lengt
 		cerr << "[DataStream] Tried reading DataStream while in write mode" << endl;
 #endif
 
-#if DATASTREAM_EXCEPTIONS
+#ifdef DATASTREAM_EXCEPTIONS
 		throw exception("Tried reading DataStream but is in writing mode");
 #else
 		return '\0';
@@ -207,7 +211,7 @@ char* DataStream::InternalReadArray(StreamType expectedType, unsigned int* lengt
 		cerr << "[DataStream] Failed to read - reached end of buffer" << endl;
 #endif
 
-#if DATASTREAM_EXCEPTIONS
+#ifdef DATASTREAM_EXCEPTIONS
 		throw exception("Failed to read DataStream, reached end of buffer");
 #else
 		return '\0';
@@ -221,14 +225,14 @@ char* DataStream::InternalReadArray(StreamType expectedType, unsigned int* lengt
 		cerr << "[DataStream] Read wrong type, aborting..." << endl;
 #endif
 
-#if DATASTREAM_EXCEPTIONS
+#ifdef DATASTREAM_EXCEPTIONS
 		throw exception("Read wrong type, aborting...");
 #else
 		return '\0';
 #endif
 	}
 
-	if (type == StreamType::STRING || type == StreamType::CHARARRAY)
+	if (type == StreamType::String || type == StreamType::CharArray)
 	{
 		memcpy(length, m_Data + m_Index, sizeof(unsigned int));
 		m_Index += sizeof(unsigned int);

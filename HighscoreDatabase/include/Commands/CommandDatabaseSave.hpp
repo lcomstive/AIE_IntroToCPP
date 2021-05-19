@@ -1,8 +1,18 @@
+/*
+ *
+ * AIE Introduction to C++
+ * Highscore Database
+ * Lewis Comstive (s210314)
+ *
+ * See the LICENSE file in the root directory of project for copyright.
+ *
+ */
+
 #pragma once
 #include <vector>
 #include <iostream>
 #include <Utilities.hpp>
-#include <Commands/ConsoleCommands.hpp>
+#include <Commands/ConsoleCommand.hpp>
 
 namespace HighscoreDatabase
 {
@@ -11,12 +21,12 @@ namespace HighscoreDatabase
 	public:
 		CommandDatabaseSave(PlayerDatabase* db) : ConsoleCommand(db) { }
 
-		bool CheckCommand(std::string& input) { return StartsWith(input, "save") || StartsWith(input, "write"); }
+		bool CheckCommand(std::string& input) override { return StartsWith(input, "save") || StartsWith(input, "write"); }
 
-		std::string GetUsage() { return "save|write"; }
-		std::string GetDescription() { return "Saves current player database to file"; }
+		std::string GetUsage() override { return "save|write"; }
+		std::string GetDescription() override { return "Saves current player database to file"; }
 
-		void Execute(std::vector<std::string> arguments)
+		void Execute(std::vector<std::string> arguments) override
 		{
 			GetDatabase()->Write();
 

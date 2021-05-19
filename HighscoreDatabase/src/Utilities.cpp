@@ -50,9 +50,7 @@ vector<string> HighscoreDatabase::Split(string& input, string& delimiter)
 std::vector<std::string> HighscoreDatabase::Split(std::string& input, char delimiter) { return Split(input, string(1, delimiter)); }
 std::vector<std::string> HighscoreDatabase::Split(std::string& input, const char* delimiter) { return Split(input, string(delimiter)); }
 
-/// <summary>
 /// Swaps values of the pointers
-/// </summary>
 void SwapElements(PlayerData* first, PlayerData* second)
 {
 	PlayerData temp = *first;

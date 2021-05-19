@@ -38,22 +38,26 @@ string GetArgument(int argc, char** argv, const string& option)
 	return "";
 }
 
-const int ConsolePrintMaxPlayers = 500; // Console will only print up to this amount of players
 const int RandomScoreMin = 10, RandomScoreMax = 99;
 
 int RandomModifier = 0;
 int GetRandomScore()
 {
-	srand((unsigned int)time(NULL) * RandomModifier++); // Yay pseudorandomness
+	srand(static_cast<unsigned>(time(nullptr)) * RandomModifier++); // Yay pseudorandomness
 	return rand() % RandomScoreMax + RandomScoreMin;
 }
 
 int main(int argc, char** argv)
 {
 	bool shouldExit = false;
-	srand((unsigned int)time(NULL)); // Random sed
+	srand(static_cast<unsigned>(time(nullptr))); // Random sed
 	PlayerDatabase db(GetArgument(argc, argv, "--file"));
 
+	unsigned int addPlayerCount = MaxPlayers - db.GetPlayerCount();
+	for(unsigned int i = db.GetPlayerCount(); i < MaxPlayers; i++)
+		db.AddPlayer("Test " + to_string(i), i);
+	cout << "FINISHED ADDING " << addPlayerCount << " PLAYERS" << endl;
+	
 	// Add commands
 	vector<ConsoleCommand*> commands;
 
@@ -67,8 +71,6 @@ int main(int argc, char** argv)
 
 	commands.push_back(new CommandHelp(&db, &commands));
 	commands.push_back(new CommandExit(&db, &shouldExit));
-
-	vector<PlayerData*> createdPlayers;
 
 	cout << "---------------------------" << endl;
 	cout << "-- Player Score Database --" << endl;

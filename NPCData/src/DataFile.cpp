@@ -38,7 +38,7 @@ unsigned int DataFile::GetRecordCount() { return m_RecordCount; }
 DataFile::Record* DataFile::GetCurrentRecord() { return m_CurrentRecord; }
 unsigned int DataFile::GetCurrentRecordIndex() { return m_CurrentRecordIndex; }
 
-void DataFile::AddRecord(string imageFilename, string name, int age)
+void DataFile::AddRecord(const string& imageFilename, const string& name, const int& age)
 {
 	Image i = LoadImage(imageFilename.c_str());
 
@@ -47,7 +47,6 @@ void DataFile::AddRecord(string imageFilename, string name, int age)
 	r->age = age;
 	r->SetImage(i);
 
-	// records.push_back(r);
 	m_RecordCount++;
 }
 

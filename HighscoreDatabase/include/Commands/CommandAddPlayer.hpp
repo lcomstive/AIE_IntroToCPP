@@ -1,7 +1,17 @@
+/*
+ *
+ * AIE Introduction to C++
+ * Highscore Database
+ * Lewis Comstive (s210314)
+ *
+ * See the LICENSE file in the root directory of project for copyright.
+ *
+ */
+
 #pragma once
 #include <iostream>
 #include <Utilities.hpp>
-#include <Commands/ConsoleCommands.hpp>
+#include <Commands/ConsoleCommand.hpp>
 
 namespace HighscoreDatabase
 {
@@ -10,14 +20,15 @@ namespace HighscoreDatabase
 	public:
 		CommandAddPlayer(PlayerDatabase* db) : ConsoleCommand(db) { }
 
-		bool CheckCommand(std::string& input) { return StartsWith(input, "add"); }
+		bool CheckCommand(std::string& input) override { return StartsWith(input, "add"); }
 
-		std::string GetUsage() { return "add <username> (score=0)"; }
-		std::string GetDescription() { return "Adds new player to database"; }
+		std::string GetUsage() override { return "add <username> (score=0)"; }
+		std::string GetDescription() override { return "Adds new player to database"; }
 
-		void Execute(std::vector<std::string> arguments)
+		void Execute(std::vector<std::string> arguments) override
 		{
-			if (arguments.size() == 0)
+			// Check for at least one argument
+			if (arguments.empty())
 			{
 				std::cout << GetUsage() << std::endl;
 				return;
@@ -30,7 +41,7 @@ namespace HighscoreDatabase
 			try
 			{	// Attempt to parse score as integer
 				score = arguments.size() > 1 ? stoi(arguments[1]) : 0;
-			} catch(std::exception) { }
+			} catch(const std::exception&) { }
 
 			PlayerData* player = db->AddPlayer(arguments[0], score);
 			
