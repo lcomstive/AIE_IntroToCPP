@@ -137,7 +137,7 @@ namespace HighscoreDatabase
 		void WriteToFile(std::string filepath);
 
 		/// Template for writing to the stream
-		template<typename T> DataStream* Write(T t) { throw exception("Tried writing invalid type to stream"); }
+		template<typename T> DataStream* Write(T t) { throw std::exception("Tried writing invalid type to stream"); }
 
 		/// Writes to the stream
 		/// \param c Array of data
@@ -212,10 +212,10 @@ namespace HighscoreDatabase
 		// --- READ --- //
 
 		/// Template for reading from the stream
-		template<typename T> T Read() { throw exception("Tried reading invalid type"); }
+		template<typename T> T Read() { throw std::exception("Tried reading invalid type"); }
 
 		/// Template for reading an array from the stream
-		template<typename T> T ReadArray(unsigned int* Length) { throw exception("Tried reading invalid type"); }
+		template<typename T> T ReadArray(unsigned int* Length) { throw std::exception("Tried reading invalid type"); }
 
 		/// Reads an array from the stream
 		/// \param Length The length read from the array

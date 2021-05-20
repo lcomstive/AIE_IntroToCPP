@@ -12,9 +12,11 @@ int main(int argc, char* argv[])
 		for (unsigned int y = 10; y < 40; y++)
 			world.SetParticle(x, y, ParticleType::Sand);
 
+	/*
 	for (unsigned int x = 40; x < 60; x++)
 		for (unsigned int y = 50; y < 55; y++)
 			world.SetParticle(x, y, ParticleType::Water);
+	*/
 
 	world.Run();
 

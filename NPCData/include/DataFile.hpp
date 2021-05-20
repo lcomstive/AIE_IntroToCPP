@@ -38,7 +38,7 @@ public:
 		~Record();
 
 		Texture2D GetTexture();
-		void SetImage(Image& i);
+		void SetImage(Image i);
 
 	private:
 		Texture2D m_Texture;
@@ -57,7 +57,9 @@ private:
 
 public:
 	/// Tries to open and read data file
-	DataFile(const string m_Filepath);
+	DataFile(const string& m_Filepath);
+
+	/// Release resources
 	~DataFile();
 
 	/// \returns Total records read from file
@@ -66,12 +68,13 @@ public:
 	/// \returns Index of record that is currently read into memory
 	unsigned int GetCurrentRecordIndex();
 
-	void SaveCurrentRecord();
-	void AddRecord(const string& imageFilename, const string& name, const int& age);
-
+	// --- GETTERS --- //
+	
 	Record* GetNextRecord();
 	Record* GetCurrentRecord();
 	Record* GetPreviousRecord();
 	Record* GetRecord(unsigned int index);
+
+	bool IsValid() const;
 };
 

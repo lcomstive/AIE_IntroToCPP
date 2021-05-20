@@ -12,3 +12,7 @@ obj/
 # Misc.
 [Tt]mp/
 [Tt]emp/
+
+# Temp files for school submission
+VS2019-Build/
+Windows_x64_Release/

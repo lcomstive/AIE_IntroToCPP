@@ -19,17 +19,17 @@ string GetArgument(const int argc, const char** argv, const string& option)
 	return "";
 }
 
-int GetArgumentInt(const int argc, const char** argv, const string& option)
+int GetArgumentInt(const int argc, const char** argv, const string& option, int defaultValue = 0)
 {
 	const string raw = GetArgument(argc, argv, option);
-	return raw.empty() ? 0 : stoi(raw); // stoi is a C++11 feature
+	return raw.empty() ? defaultValue : stoi(raw); // stoi is a C++11 feature
 }
 
 GameArgs ParseArguments(const int argc, const char** argv)
 {
 	GameArgs args;
-	args.BoardSize   = GetArgumentInt(argc, argv, "--board-size");
-	args.PlayerCount = GetArgumentInt(argc, argv, "--player-count");
+	args.BoardSize   = GetArgumentInt(argc, argv, "--board-size", 3);
+	args.PlayerCount = GetArgumentInt(argc, argv, "--player-count", 2);
 	args.AiPlayerCount = GetArgumentInt(argc, argv, "--ai-players");
 	return args;
 }

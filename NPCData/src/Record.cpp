@@ -2,19 +2,21 @@
 
 using namespace std;
 
-DataFile::Record::Record() : image({ 0 }), m_Texture({}), name(""), age(0) { }
+DataFile::Record::Record() : image({ 0 }), m_Texture({}), name(), age(0) { }
 
 DataFile::Record::~Record()
 {
 	if (image.width <= 0 || image.height <= 0)
-		return;
+		return; // Invalid image
+
+	// Free resources
 	UnloadTexture(m_Texture);
 
 	if (image.data)
 		RL_FREE(image.data);
 }
 
-void DataFile::Record::SetImage(Image& i)
+void DataFile::Record::SetImage(Image i)
 {
 	image = i;
 	m_Texture = LoadTextureFromImage(image);

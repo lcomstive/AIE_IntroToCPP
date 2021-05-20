@@ -12,6 +12,7 @@
 #include <Commands/CommandExit.hpp>
 #include <Commands/CommandHelp.hpp>
 #include <Commands/CommandSearch.hpp>
+#include <Commands/CommandSetScore.hpp>
 #include <Commands/CommandAddPlayer.hpp>
 #include <Commands/CommandSortPlayers.hpp>
 #include <Commands/CommandDatabaseSave.hpp>
@@ -52,11 +53,6 @@ int main(int argc, char** argv)
 	bool shouldExit = false;
 	srand(static_cast<unsigned>(time(nullptr))); // Random sed
 	PlayerDatabase db(GetArgument(argc, argv, "--file"));
-
-	unsigned int addPlayerCount = MaxPlayers - db.GetPlayerCount();
-	for(unsigned int i = db.GetPlayerCount(); i < MaxPlayers; i++)
-		db.AddPlayer("Test " + to_string(i), i);
-	cout << "FINISHED ADDING " << addPlayerCount << " PLAYERS" << endl;
 	
 	// Add commands
 	vector<ConsoleCommand*> commands;
@@ -67,6 +63,7 @@ int main(int argc, char** argv)
 	commands.push_back(new CommandPrintPlayers(&db));
 	commands.push_back(new CommandSearchPlayer(&db));
 	commands.push_back(new CommandDatabaseSave(&db));
+	commands.push_back(new CommandSetPlayerScore(&db));
 	commands.push_back(new CommandDatabaseRefresh(&db));
 
 	commands.push_back(new CommandHelp(&db, &commands));

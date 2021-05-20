@@ -47,7 +47,7 @@ void PlayerDatabase::Refresh()
 		m_Players[i].SetUsername(stream.Read<string>());
 	}
 
-	// Sort alphabetically
+	// Sort alphabetically, as per specification
 	SortByUsername();
 
 #ifndef NDEBUG

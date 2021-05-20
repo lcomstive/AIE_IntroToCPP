@@ -3,9 +3,25 @@
 
 using namespace std;
 
-DataFile::DataFile(const string path) : m_Filepath(path), m_CurrentRecord(nullptr), m_CurrentRecordIndex(0), m_RecordOffsets()
+DataFile::DataFile(const string& path) : m_Filepath(path), m_CurrentRecord(nullptr), m_CurrentRecordIndex(0), m_RecordOffsets()
 {
 	m_File = ifstream(m_Filepath, ios::binary);
+
+	if(!m_File)
+	{
+		if(IsWindowReady())
+			CloseWindow();
+		
+		cerr << endl << "Failed to open '" << m_Filepath << "'" << endl;
+		cerr << "Press ENTER to exit..." << endl;
+
+#if _WIN32
+		getchar();
+#else
+
+#endif
+		return;
+	}
 
 	// Read first integer in file, which represents record count
 	m_RecordCount = 0;
@@ -29,62 +45,12 @@ DataFile::DataFile(const string path) : m_Filepath(path), m_CurrentRecord(nullpt
 	ReadRecord();
 }
 
-DataFile::~DataFile()
-{
-	m_File.close();
-}
+DataFile::~DataFile() { if(m_File) m_File.close(); }
 
 unsigned int DataFile::GetRecordCount() { return m_RecordCount; }
 DataFile::Record* DataFile::GetCurrentRecord() { return m_CurrentRecord; }
 unsigned int DataFile::GetCurrentRecordIndex() { return m_CurrentRecordIndex; }
-
-void DataFile::AddRecord(const string& imageFilename, const string& name, const int& age)
-{
-	Image i = LoadImage(imageFilename.c_str());
-
-	Record* r = new Record;
-	r->name = name;
-	r->age = age;
-	r->SetImage(i);
-
-	m_RecordCount++;
-}
-
-void DataFile::SaveCurrentRecord()
-{
-
-}
-
-/*
-void DataFile::Save(string filename)
-{
-	ofstream outfile(filename, ios::binary);
-
-	int recordCount = records.size();
-	outfile.write((char*)&recordCount, sizeof(int));
-
-	for (int i = 0; i < recordCount; i++)
-	{		
-		Color* imgdata = GetImageData(records[i]->image);
-				
-		int imageSize = sizeof(Color) * records[i]->image.width * records[i]->image.height;
-		int nameSize = records[i]->name.length();
-		int ageSize = sizeof(int);
-
-		outfile.write((char*)&records[i]->image.width, sizeof(int));
-		outfile.write((char*)&records[i]->image.height, sizeof(int));
-		
-		outfile.write((char*)&nameSize, sizeof(int));
-		outfile.write((char*)&ageSize, sizeof(int));
-
-		outfile.write((char*)imgdata, imageSize);
-		outfile.write((char*)records[i]->name.c_str(), nameSize);
-		outfile.write((char*)&records[i]->age, ageSize);
-	}
-
-	outfile.close();
-}
-*/
+bool DataFile::IsValid() const { return m_File.good(); }
 
 // Copied LoadImageEx from Raylib v3.0.0 texture.c
 // Versions of Raylib after v3.0.0 remove LoadImageEx
@@ -96,8 +62,8 @@ void DataFile::Save(string filename)
 // NOTE: Creates a copy of pixels data array
 Image LoadImageEx(Color* pixels, int width, int height)
 {
-	Image image = { 0 };
-	image.data = NULL;
+	Image image = { };
+	image.data = nullptr;
 	image.width = width;
 	image.height = height;
 	image.mipmaps = 1;
@@ -105,14 +71,14 @@ Image LoadImageEx(Color* pixels, int width, int height)
 
 	int k = 0;
 
-	image.data = (unsigned char*)RL_MALLOC(image.width * image.height * 4 * sizeof(unsigned char));
+	image.data = RL_MALLOC(image.width * image.height * 4 * sizeof(unsigned char));
 
 	for (int i = 0; i < image.width * image.height * 4; i += 4)
 	{
-		((unsigned char*)image.data)[i] = pixels[k].r;
-		((unsigned char*)image.data)[i + 1] = pixels[k].g;
-		((unsigned char*)image.data)[i + 2] = pixels[k].b;
-		((unsigned char*)image.data)[i + 3] = pixels[k].a;
+		(static_cast<unsigned char*>(image.data))[i]	 = pixels[k].r;
+		(static_cast<unsigned char*>(image.data))[i + 1] = pixels[k].g;
+		(static_cast<unsigned char*>(image.data))[i + 2] = pixels[k].b;
+		(static_cast<unsigned char*>(image.data))[i + 3] = pixels[k].a;
 		k++;
 	}
 

@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <iostream>
 
-#include "Console.hpp"
+#include <Console.hpp>
 
 using namespace std;
 using namespace TicTacToe;
@@ -151,7 +151,7 @@ void Console::SetTitle(const string& title)
 	Initialise();
 
 #ifdef _WIN32
-	SetConsoleTitle(title.c_str());
+	SetConsoleTitleA(title.c_str());
 #elif __unix__ || __APPLE__
 	printf("\033]0;%s", title.c_str()); // Don't think this works?
 #endif

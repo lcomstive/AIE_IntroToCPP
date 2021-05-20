@@ -1,6 +1,11 @@
 #include <raylib.h>
-#include "DataFile.hpp"
+#include <DataFile.hpp>
 
+const int ScreenWidth = 800;
+const int ScreenHeight = 450;
+const string DataFilePath = "npc_data.dat";
+
+/// Clamps `value` between `min` and `max`, inclusive
 int clamp(int value, int min, int max)
 {
 	if (value < min) return min;
@@ -10,52 +15,55 @@ int clamp(int value, int min, int max)
 
 int main(int argc, char* argv[])
 {
-	// Initialization
-	//--------------------------------------------------------------------------------------
-	int screenWidth = 800;
-	int screenHeight = 450;
+	// --- INITIALISATION --- //
+	
+	// Create Raylib window, which also initialises OpenGL context
+	InitWindow(ScreenWidth, ScreenHeight, "NPC Data Viewer");
 
-	InitWindow(screenWidth, screenHeight, "raylib [core] example - basic window");
+	// Read in data from local file
+	DataFile data(DataFilePath);
+	if(!data.IsValid())
+		return -1;
 
-	DataFile data("npc_data.dat");
-	int currentRecordIdx = 0;
+	int currentRecordIndex = 0;
+	DataFile::Record* currentRecord = data.GetRecord(currentRecordIndex); // Get pointer to record data
+	Texture2D recordTexture = currentRecord->GetTexture();				  // Texture to display
 
-	DataFile::Record* currentRecord = data.GetRecord(0);
-	Texture2D recordTexture = currentRecord->GetTexture();
+	SetTargetFPS(60); // Limit FPS to save on system resources being hogged
 
-	SetTargetFPS(60);
-	//--------------------------------------------------------------------------------------
-
-	// Main game loop
-	while (!WindowShouldClose())    // Detect window close button or ESC key
+	// --- DISPLAY LOOP --- //
+	while (!WindowShouldClose()) // Detect window close button or ESC key
 	{
 		// Get user input
-		int newIndex = currentRecordIdx;
+		int newIndex = currentRecordIndex;
+
+		// Check for number keys pressed
 		for (int i = KEY_ONE; i < KEY_NINE; i++)
 		{
 			if (IsKeyPressed(i))
-				newIndex = i - KEY_ONE;
+				newIndex = i - KEY_ONE; // Offset from first key (KEY_ONE)
 		}
-		newIndex += -1 * IsKeyPressed(KEY_LEFT) + IsKeyPressed(KEY_RIGHT); // -1 for left, 0 for no change, 1 for right
+		newIndex += -1 * IsKeyPressed(KEY_LEFT) + IsKeyPressed(KEY_RIGHT);    // -1 for left, 0 for no change, 1 for right
 		newIndex = clamp(newIndex, 0, data.GetRecordCount() - 1); // Clamp selected index within appropriate bounds
 
-		if (newIndex != currentRecordIdx) // Check if record index has changed
+		if (newIndex != currentRecordIndex) // Check if record index has changed
 		{
-			currentRecordIdx = newIndex;
+			currentRecordIndex = newIndex;
 
 			// Acquire new record
 			currentRecord = data.GetRecord(newIndex);
 			recordTexture = currentRecord->GetTexture();
 		}
 
-		// Draw
-		//----------------------------------------------------------------------------------
+		// --- DRAW -- //
 		BeginDrawing();
 
 		ClearBackground(RAYWHITE);
 
+		// Draw Texture //
 		DrawTexture(recordTexture, 300, 50, WHITE);
 
+		// Draw NPC Info 
 		DrawText("NAME", 10, 50, 20, LIGHTGRAY);
 		DrawText(currentRecord->name.c_str(), 10, 80, 20, LIGHTGRAY);
 
@@ -63,15 +71,11 @@ int main(int argc, char* argv[])
 		DrawText(to_string(currentRecord->age).c_str(), 10, 150, 20, LIGHTGRAY);
 
 		EndDrawing();
-		//----------------------------------------------------------------------------------
 	}
 
+	// Cleanup
 	delete currentRecord;
-
-	// De-Initialization
-	//--------------------------------------------------------------------------------------   
 	CloseWindow();        // Close window and OpenGL context
-	//--------------------------------------------------------------------------------------
 
 	return 0;
 }

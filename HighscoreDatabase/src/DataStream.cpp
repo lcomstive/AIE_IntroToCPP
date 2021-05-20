@@ -67,7 +67,7 @@ DataStream::DataStream(string path, unsigned int initialSize) : m_Index(0), m_Le
 	}
 
 	// Because ios::ate seeks the entire file, tellg() returns the filesize
-	unsigned int fileSize = input.tellg();
+	unsigned int fileSize = static_cast<unsigned int>(input.tellg());
 
 	// Set stream position back at beginning
 	input.clear();
